@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cetix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${POSTGRES_DB:-cetix}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cetix
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cetix
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+    env_file:
+      - backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cetix
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/node/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    env_file:
+      - frontend/.env
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/healthz"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cetix
+
+volumes:
+  pgdata:
+  backend_vendor:
+  frontend_node_modules:
+
+networks:
+  cetix:
+    driver: bridge
