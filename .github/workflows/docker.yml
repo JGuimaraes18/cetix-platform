@@ -1,0 +1,23 @@
+name: Docker
+
+on:
+  pull_request:
+    paths:
+      - 'docker/**'
+      - 'compose.yaml'
+      - 'backend/**'
+      - 'frontend/**'
+  push:
+    branches: [main]
+    paths:
+      - 'docker/**'
+      - 'compose.yaml'
+      - 'backend/**'
+      - 'frontend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build

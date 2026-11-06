@@ -1,4 +1,4 @@
-.PHONY: up down build logs ps migrate key test lint
+.PHONY: up down build logs ps migrate key test lint typecheck
 
 up:
 	docker compose up -d --build
@@ -8,6 +8,7 @@ down:
 
 build:
 	docker compose build
+	docker compose exec frontend npm run build
 
 logs:
 	docker compose logs -f --tail=100
@@ -25,6 +26,9 @@ test:
 	docker compose exec backend php artisan test
 	docker compose exec frontend npm run test
 
-lint:
+typecheck:
+	docker compose exec frontend npx tsc --noEmit
+
+lint: typecheck
 	docker compose exec backend vendor/bin/pint --test
 	docker compose exec frontend npm run lint

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
-Route::get('/v1/health', function (): \Illuminate\Http\JsonResponse {
+Route::get('/v1/health', function (): JsonResponse {
     $checks = [];
 
     try {
         DB::connection()->getPdo();
         $checks['database'] = 'ok';
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $checks['database'] = 'error: '.$e->getMessage();
     }
 
@@ -18,7 +18,7 @@ Route::get('/v1/health', function (): \Illuminate\Http\JsonResponse {
         $redis = app('redis')->connection();
         $redis->ping();
         $checks['redis'] = 'ok';
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         $checks['redis'] = 'error: '.$e->getMessage();
     }
 

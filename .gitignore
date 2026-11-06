@@ -41,3 +41,6 @@ yarn-error.log*
 # Test
 frontend/coverage/
 backend/.phpunit.cache/
+
+# TypeScript
+*.tsbuildinfo
